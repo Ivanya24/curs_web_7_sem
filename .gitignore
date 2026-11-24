@@ -1,0 +1,15 @@
+# .NET (Money_API)
+bin/
+obj/
+*.user
+*.suo
+*.cache
+.vs/
+
+# Frontend (money-frontend)
+node_modules/
+dist/
+.env
+
+# Local Databases
+*.db
