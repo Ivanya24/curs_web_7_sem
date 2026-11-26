@@ -49,13 +49,33 @@ public class TransactionsController : ControllerBase
     // GET /api/transactions/account/{accountId}?from=...&to=...
     // Доступно ТОЛЬКО для роли Admin
     [HttpGet("account/{accountId:int}")]
-    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<List<TransactionDto>>> GetByAccount(
         int accountId, 
         [FromQuery] DateTime? from, 
         [FromQuery] DateTime? to)
     {
-        var result = await _transactions.GetByAccountIdAsync(accountId, from, to);
+        // 1. Извлекаем ID текущего пользователя из JWT-токена
+        // ВАЖНО: Убедитесь, что при генерации токена вы используете именно "UserId" или ClaimTypes.NameIdentifier
+        var userIdClaim = User.FindFirst("UserId")?.Value ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        
+        if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int currentUserId))
+        {
+            return Unauthorized(new { message = "Не удалось определить пользователя" });
+        }
+
+        // 2. Проверяем, является ли пользователь администратором
+        bool isAdmin = User.IsInRole("Admin");
+
+        // 3. Передаем currentUserId и isAdmin в сервис для проверки прав
+        var result = await _transactions.GetByAccountIdAsync(accountId, currentUserId, isAdmin, from, to);
+
+        // 4. Если сервис вернул null, значит счета не существует или нет прав доступа
+        if (result == null)
+        {
+            // Возвращаем 404 для защиты от перебора ID (ID Enumeration)
+            return NotFound(new { message = "Счет не найден или доступ запрещен" });
+        }
+
         return Ok(result);
     }
 
@@ -82,4 +102,8 @@ public class TransactionsController : ControllerBase
         if (result is null) return NotFound();   // или BadRequest
         return Ok(result);
     }
+
+
+    
 }
+

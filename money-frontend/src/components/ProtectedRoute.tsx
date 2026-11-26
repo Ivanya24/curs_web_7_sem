@@ -1,4 +1,4 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom"; // ← Добавили useLocation
 import { useAuth } from "../contexts/AuthContext";
 import type { ReactNode } from "react";
 
@@ -9,9 +9,11 @@ interface Props {
 
 export function ProtectedRoute({ children, adminOnly = false }: Props) {
   const { isAuthenticated, isAdmin } = useAuth();
+  const location = useLocation(); // ← Получаем текущий путь
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    // 🔑 КЛЮЧЕВОЙ МОМЕНТ: передаем путь, куда хотел попасть пользователь
+    return <Navigate to="/login" replace state={{ from: location }} />;
   }
 
   if (adminOnly && !isAdmin) {

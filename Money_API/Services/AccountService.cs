@@ -12,75 +12,7 @@ public class AccountService
 
     public AccountService(AppDbContext db) => _db = db;
 
-    // ================================================================
 
-    // TODO: реализовать самостоятельно.
-    //
-    // Шаги:
-    // 1. Проверить дубликат (UserId, Name):
-    //    var exists = await _db.Accounts
-    //        .AnyAsync(a => a.UserId == userId && a.Name == dto.Name);
-    //    if (exists) return null;   // контроллер ответит 409 Conflict
-    //
-    // 2. Создать счёт:
-    //    var account = new Account {
-    //        Name = dto.Name,
-    //        Type = dto.Type,
-    //        UserId = userId,
-    //        CreatedAt = DateTime.UtcNow
-    //    };
-    //
-    // 3. _db.Accounts.Add(account);
-    //    await _db.SaveChangesAsync();
-    //
-    // 4. Вернуть AccountDto { Id = account.Id, Name, Type, Balance = 0 }.
-    //    Balance = 0, потому что транзакций ещё нет.
-    // ================================================================
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  // ================================================================
-    // ЗАДАЧА: создать счёт для пользователя userId.
-    //
-    // ЧТО ДОЛЖНО ПРОИЗОЙТИ:
-    // 1. Нельзя создать два счёта с одинаковым именем у одного юзера.
-    //    Если такой уже есть — вернуть null (контроллер ответит 409).
-    //
-    // 2. Если дубликата нет — создать новую запись Account:
-    //    - Name  = из dto
-    //    - Type  = из dto
-    //    - UserId = параметр userId (НЕ из dto — его там нет)
-    //    - CreatedAt = текущее UTC-время (сервер сам ставит)
-    //
-    // 3. Сохранить в БД (Add + SaveChangesAsync).
-    //
-    // 4. Вернуть AccountDto:
-    //    - Id, Name, Type — из созданного Account
-    //    - Balance = 0 (транзакций ещё нет)
-    //
-    // ПОДСКАЗКИ ПО API (без готового кода):
-    // - проверка дубликата: AnyAsync(...) на _db.Accounts
-    // - создание: new Account { ... }
-    // - сохранение: _db.Accounts.Add(...) + SaveChangesAsync()
-    // - возврат: new AccountDto { ... }
-    // ================================================================
     public async Task<AccountDto?> CreateAsync(int userId, CreateAccountDto dto)
     {
         var exists = await _db.Accounts
@@ -104,7 +36,6 @@ public class AccountService
         };
     }
 
-    // Готово: список счетов с балансом + общая сумма
     public async Task<AccountsSummaryDto> GetSummaryAsync(int userId)
         {
             var rows = await _db.Accounts
@@ -168,8 +99,7 @@ public class AccountService
             Accounts = accounts
         };
     }
-    
-    // Готово: удалить счёт (транзакции уйдут каскадом)
+
     public async Task<bool> DeleteAsync(int userId, int accountId)
     {
         var account = await _db.Accounts

@@ -13,12 +13,13 @@ export function CreateAccountForm({ onSubmit, onCancel }: Props) {
   });
   const [error, setError] = useState<string | null>(null);
 
-    const handleChange = (field: keyof CreateAccountDto, value: string) => {
+
+  const handleChange = (field: keyof CreateAccountDto, value: string) => {
     setForm((f) => ({
-        ...f,
-        [field]: field === "name" || field === "type" ? value : Number(value),
+      ...f,
+      [field]: value,
     }));
-    };
+  };
 
 
   const handleSubmit = async (e: React.FormEvent) => {

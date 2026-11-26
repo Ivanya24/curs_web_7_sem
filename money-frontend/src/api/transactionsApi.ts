@@ -1,31 +1,36 @@
-import {type CreateTransactionDto, type TransactionDto, type SummaryDto } from "../types/money";
+import { type CreateTransactionDto, type TransactionDto, type SummaryDto } from "../types/money";
 
 const BASE_URL = "http://localhost:5191/api/transactions";
 
-async function request<T>(url:string , options?: RequestInit): Promise<T> {
+async function request<T>(url: string, options?: RequestInit): Promise<T> {
     const token = localStorage.getItem("token");
     
     const response = await fetch(url, {
         headers: { 
             "Content-Type": "application/json",
-            ...(token? {Authorization : `Bearer ${token}`} : {}),
-            
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         ...options
     });
 
-    if (response.status === 401){
+    if (response.status === 401) {
         localStorage.removeItem("token");
         window.location.href = "/login";
         throw new Error("Не авторизован");
     }
 
-    if (!response.ok){
+    // ✅ ИСПРАВЛЕННЫЙ БЛОК ОБРАБОТКИ ОШИБОК
+    if (!response.ok) {
         const text = await response.text();
-        throw new Error(text || `Ошибка ${response.status}`);
+        // 1. Создаем объект ошибки
+        const error = new Error(text || `Ошибка ${response.status}`);
+        // 2. Добавляем к нему HTTP-статус
+        (error as any).status = response.status; 
+        // 3. Выбрасываем исправленную ошибку
+        throw error;
     }
 
-    if (response.status === 204 || response.headers.get("content-length") === "0"){
+    if (response.status === 204 || response.headers.get("content-length") === "0") {
         return undefined as T;
     }
 
@@ -33,7 +38,7 @@ async function request<T>(url:string , options?: RequestInit): Promise<T> {
 }
 
 export const transactionsApi = {
-    getByAccount: (accountId: number,from?: string,to?: string): Promise<TransactionDto[]> => {
+    getByAccount: (accountId: number, from?: string, to?: string): Promise<TransactionDto[]> => {
         const params = new URLSearchParams();
         if (from) params.set('from', from);
         if (to) params.set('to', to);
@@ -45,7 +50,7 @@ export const transactionsApi = {
     },
 
     GetById: (transactionID: number): Promise<TransactionDto> => {
-        return request<TransactionDto>(`${BASE_URL}/${transactionID}`)
+        return request<TransactionDto>(`${BASE_URL}/${transactionID}`);
     },
 
     Create: (dto: CreateTransactionDto): Promise<TransactionDto> =>
@@ -80,10 +85,10 @@ export const transactionsApi = {
         request<TransactionDto>(`${BASE_URL}/${id}`, {
             method: "PUT",
             body: JSON.stringify(dto),
-    }),
+        }),
 
     Delete: (id: number): Promise<void> =>
-        request<void>(`${BASE_URL}/${id}`,
-        {method:"DELETE"}
-        ),
-}
+        request<void>(`${BASE_URL}/${id}`, {
+            method: "DELETE"
+        }),
+};

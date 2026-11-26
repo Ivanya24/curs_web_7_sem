@@ -12,12 +12,10 @@ export function TransactionRow() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    // режим редактирования
     const [isEditing, setIsEditing] = useState(false);
     const [form, setForm] = useState<CreateTransactionDto | null>(null);
     const [saving, setSaving] = useState(false);
 
-    // загрузка
     useEffect(() => {
         if (Number.isNaN(transactionId)) {
             setError("Неверный ID транзакции");
@@ -38,7 +36,6 @@ export function TransactionRow() {
         })();
     }, [transactionId]);
 
-    // начать редактирование — копируем в form
     const startEdit = () => {
         if (!transaction) return;
         setForm({
@@ -53,20 +50,18 @@ export function TransactionRow() {
         setError(null);
     };
 
-    // отмена — выходим, form не трогаем
     const cancelEdit = () => {
         setIsEditing(false);
         setForm(null);
         setError(null);
     };
 
-    // сохранить — PUT
     const handleSave = async () => {
         if (!form) return;
         try {
             setSaving(true);
             const updated = await transactionsApi.Update(transactionId, form);
-            setTransaction(updated);   // обновить просмотр
+            setTransaction(updated);
             setIsEditing(false);
             setForm(null);
             setError(null);
@@ -87,18 +82,18 @@ export function TransactionRow() {
         }
     };
 
-    if (loading) return <div className="container">Загрузка…</div>;
-    if (error && !isEditing) return <div className="container error">{error}</div>;
-    if (!transaction) return <div className="container">Не найдено</div>;
+    if (loading) return <div className="tr-container">Загрузка…</div>;
+    if (error && !isEditing) return <div className="tr-container tr-error">{error}</div>;
+    if (!transaction) return <div className="tr-container">Не найдено</div>;
 
     // ---------- РЕЖИМ РЕДАКТИРОВАНИЯ ----------
     if (isEditing && form) {
         return (
-            <div className="container">
-                <button onClick={cancelEdit}>← Отмена</button>
+            <div className="tr-container">
+                <button className="tr-back-btn" onClick={cancelEdit}>← Отмена</button>
                 <h1>Редактировать транзакцию #{transaction.id}</h1>
 
-                <div className="create-form">
+                <div className="tr-form">
                     <label>
                         Сумма
                         <input
@@ -141,48 +136,41 @@ export function TransactionRow() {
                             onChange={(e) => setForm({ ...form, date: new Date(e.target.value).toISOString() })}
                         />
                     </label>
-                    <label>
-                        Счёт (ID)
-                        <input
-                            type="number"
-                            value={form.accountId}
-                            onChange={(e) => setForm({ ...form, accountId: Number(e.target.value) })}
-                        />
-                    </label>
 
-                    {error && <div className="error">{error}</div>}
+                    {error && <div className="tr-error">{error}</div>}
 
-                    <div className="form-actions">
-                        <button onClick={handleSave} disabled={saving}>
+                    <div className="tr-actions">
+                        <button className="tr-btn tr-btn-primary" onClick={handleSave} disabled={saving}>
                             {saving ? "Сохранение…" : "Сохранить"}
                         </button>
-                        <button type="button" onClick={cancelEdit}>Отмена</button>
+                        <button className="tr-btn tr-btn-secondary" type="button" onClick={cancelEdit}>
+                            Отмена
+                        </button>
                     </div>
                 </div>
             </div>
         );
     }
 
-    // ---------- РЕЖИМ ПРОСМОТРА (как было) ----------
+    // ---------- РЕЖИМ ПРОСМОТРА ----------
     return (
-        <div className="container">
-            <button onClick={() => navigate(-1)}>← Назад</button>
+        <div className="tr-container">
+            <button className="tr-back-btn" onClick={() => navigate(-1)}>← Назад</button>
 
             <h1>Транзакция #{transaction.id}</h1>
 
-            <div className="transaction-detail">
-                <p><strong>Сумма:</strong> {transaction.amount}</p>
-                <p><strong>Тип:</strong> {transaction.kind === "Income" ? "Доход" : "Расход"}</p>
-                <p><strong>Категория:</strong> {transaction.category ?? "—"}</p>
-                <p><strong>Заметка:</strong> {transaction.note ?? "—"}</p>
-                <p><strong>Дата:</strong> {new Date(transaction.date).toLocaleDateString("ru-RU")}</p>
-                <p><strong>Счёт:</strong> #{transaction.accountId}</p>
+            <div className="tr-detail">
+                <p><strong>Сумма:</strong> <span>{transaction.amount} ₽</span></p>
+                <p><strong>Тип:</strong> <span>{transaction.kind === "Income" ? "Доход" : "Расход"}</span></p>
+                <p><strong>Категория:</strong> <span>{transaction.category ?? "—"}</span></p>
+                <p><strong>Заметка:</strong> <span>{transaction.note ?? "—"}</span></p>
+                <p><strong>Дата:</strong> <span>{new Date(transaction.date).toLocaleDateString("ru-RU")}</span></p>
             </div>
 
-            <div className="form-actions" style={{ marginTop: 16 }}>
-                <button onClick={startEdit}>Редактировать</button>
-                <button className="danger" onClick={handleDelete}>Удалить</button>
-                <button onClick={() => navigate(-1)}>Назад</button>
+            <div className="tr-actions">
+                <button className="tr-btn tr-btn-primary" onClick={startEdit}>Редактировать</button>
+                <button className="tr-btn tr-btn-danger" onClick={handleDelete}>Удалить</button>
+                <button className="tr-btn tr-btn-secondary" onClick={() => navigate(-1)}>Назад</button>
             </div>
         </div>
     );

@@ -15,7 +15,8 @@ export function RegisterForm() {
     try {
       setLoading(true);
       await authApi.register({ email, username, password });
-      navigate("/login");
+      // После успешной регистрации кидаем на логин, заменяя историю
+      navigate("/login", { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Ошибка регистрации");
     } finally {
@@ -24,27 +25,27 @@ export function RegisterForm() {
   };
 
   return (
-    <div className="container">
+    <div className="auth-container">
       <h1>Регистрация</h1>
-      <form className="create-form" onSubmit={handleSubmit}>
+      <form className="auth-form" onSubmit={handleSubmit}>
         <label>
           Email
           <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
         </label>
         <label>
-          Имя
+          Имя пользователя
           <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} required />
         </label>
         <label>
           Пароль
           <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
         </label>
-        {error && <div className="error">{error}</div>}
-        <div className="form-actions">
-          <button type="submit" disabled={loading}>
+        {error && <div className="auth-error">{error}</div>}
+        <div className="auth-actions">
+          <button type="submit" className="auth-btn" disabled={loading}>
             {loading ? "Регистрация…" : "Зарегистрироваться"}
           </button>
-          <Link to="/login">Вход</Link>
+          <Link to="/login" className="auth-link">Уже есть аккаунт? Войти</Link>
         </div>
       </form>
     </div>
