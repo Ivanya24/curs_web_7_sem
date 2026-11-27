@@ -1,4 +1,4 @@
-import { Navigate, useLocation } from "react-router-dom"; // ← Добавили useLocation
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import type { ReactNode } from "react";
 
@@ -8,11 +8,14 @@ interface Props {
 }
 
 export function ProtectedRoute({ children, adminOnly = false }: Props) {
+  // Убедитесь, что ваш AuthContext действительно отдает isAuthenticated!
+  // Если там только username, замените на: const { username, isAdmin } = useAuth();
+  // и ниже используйте: if (!username) { ... }
   const { isAuthenticated, isAdmin } = useAuth();
-  const location = useLocation(); // ← Получаем текущий путь
+  const location = useLocation();
 
   if (!isAuthenticated) {
-    // 🔑 КЛЮЧЕВОЙ МОМЕНТ: передаем путь, куда хотел попасть пользователь
+    console.log("🚫 Доступ запрещен. Редирект на /login с сохранением пути:", location.pathname);
     return <Navigate to="/login" replace state={{ from: location }} />;
   }
 

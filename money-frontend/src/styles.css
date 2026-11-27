@@ -16,6 +16,25 @@ body {
   line-height: 1.6;
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /* ============================================
    БАЗОВЫЕ КОМПОНЕНТЫ
    ============================================ */
@@ -33,7 +52,7 @@ body {
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(200px);
   }
   to {
     opacity: 1;
@@ -64,6 +83,21 @@ h3 {
   font-weight: 600;
   color: #4a5568;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /* ============================================
    КНОПКИ
@@ -105,6 +139,22 @@ button.danger {
 button.danger:hover:not(:disabled) {
   box-shadow: 0 6px 20px rgba(245, 101, 101, 0.6);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /* ============================================
    ФОРМЫ И ПОЛЯ ВВОДА
@@ -169,6 +219,29 @@ button.danger:hover:not(:disabled) {
   margin-top: 1.5rem;
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /* ============================================
    СПИСКИ И КАРТОЧКИ
    ============================================ */
@@ -214,6 +287,17 @@ button.danger:hover:not(:disabled) {
   font-weight: 600;
 }
 
+
+
+
+
+
+
+
+
+
+
+
 /* ============================================
    ШАПКА И ДЕЙСТВИЯ
    ============================================ */
@@ -238,6 +322,23 @@ button.danger:hover:not(:disabled) {
   font-weight: 500;
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /* ============================================
    ОШИБКИ И УВЕДОМЛЕНИЯ
    ============================================ */
@@ -250,6 +351,21 @@ button.danger:hover:not(:disabled) {
   border-left: 4px solid #f56565;
   font-weight: 500;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /* ============================================
    ПРОГРЕСС-БАРЫ
@@ -286,6 +402,28 @@ button.danger:hover:not(:disabled) {
   gap: 0.5rem;
   margin-top: 1rem;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /* ============================================
    TRANSACTION ROW
@@ -456,6 +594,23 @@ button.danger:hover:not(:disabled) {
   box-shadow: 0 6px 20px rgba(245, 101, 101, 0.6);
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /* ============================================
    AUTH FORM
    ============================================ */
@@ -562,6 +717,26 @@ button.danger:hover:not(:disabled) {
   color: #764ba2;
   text-decoration: underline;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /* ============================================
    SUMMARY PANEL
@@ -703,6 +878,31 @@ button.danger:hover:not(:disabled) {
   color: white;
   transform: scale(1.05);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /* ============================================
    ACCOUNT CARD
@@ -925,6 +1125,103 @@ button.danger:hover:not(:disabled) {
   transform: translateX(0);
 }
 
+
+
+
+
+
+
+/* Стили для блока фильтров */
+.ac-filters {
+  background-color: #f7fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.ac-filters-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: flex-end;
+}
+
+.ac-filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  flex: 1;
+  min-width: 150px;
+}
+
+.ac-filter-group label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #4a5568;
+}
+
+/* Стилизация input type="date" */
+.ac-filter-group input {
+  padding: 0.55rem 0.75rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  background-color: white;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.ac-filter-group input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.ac-filters-info {
+  margin-top: 0.75rem;
+  font-size: 0.85rem;
+  color: #718096;
+}
+
+.ac-btn-reset {
+  padding: 0.55rem 1rem;
+  background-color: #fff5f5;
+  color: #c53030;
+  border: 1px solid #feb2b2;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.ac-btn-reset:hover {
+  background-color: #fed7d7;
+  border-color: #fc8181;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /* ============================================
    NOT FOUND PAGE
    ============================================ */
@@ -986,6 +1283,39 @@ button.danger:hover:not(:disabled) {
   box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /* ============================================
    CHARTS
    ============================================ */
@@ -1015,6 +1345,18 @@ button.danger:hover:not(:disabled) {
   fill: #718096;
   font-weight: 500;
 }
+
+
+
+
+
+
+
+
+
+
+
+
 
 /* ============================================
    АДАПТИВНОСТЬ

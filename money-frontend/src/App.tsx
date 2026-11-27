@@ -38,8 +38,6 @@ export default function App() {
 
     <Route path="/accounts/:id" element={<ProtectedRoute><AccountCard /></ProtectedRoute>}/>
 
-    <Route path="/accounts/:id" element={<ProtectedRoute><AccountCard /></ProtectedRoute>}/>
-
     <Route path="/transactions/:id" element={<ProtectedRoute><TransactionRow /></ProtectedRoute>}/>
 
 

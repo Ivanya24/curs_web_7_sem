@@ -62,7 +62,7 @@ export function SummaryPanel() {
 
   return (
     <div className="sp-container">
-      <div className="sp-header">
+      <div className="sp-header">   
         <h1>Мои счета</h1>
         <div className="sp-header-actions">
           <span>Привет, <b>{username}</b></span>

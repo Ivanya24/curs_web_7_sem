@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { transactionsApi } from "../api/transactionsApi";
 import type { CreateTransactionDto, TransactionDto } from "../types/money";
@@ -8,60 +8,99 @@ import { ExpensePieChart } from "./ExpensePieChart";
 import { BalanceLineChart } from "./BalanceLineChart";
 import { calculateDashboardStats, type DashboardStats } from "./statsCalculator";
 
+
+const STORAGE_KEYS = {
+  dateFrom: (id: number) => `accountCard_dateFrom_${id}`,
+  dateTo: (id: number) => `accountCard_dateTo_${id}`,
+  search: (id: number) => `accountCard_search_${id}`,
+};
+
 export function AccountCard() {
-  const [transactions, setTransactions] = useState<TransactionDto[]>([]);
+  const { id } = useParams<{ id: string }>();
+  const accountId = Number(id);
+  const navigate = useNavigate();
+  const { username, isAdmin, logout } = useAuth();
+
+
+  const [allTransactions, setAllTransactions] = useState<TransactionDto[]>([]);
   const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
-  
-  const navigate = useNavigate();
-  const { username, logout } = useAuth();
-  const { id } = useParams<{ id: string }>();
-  const accountId = Number(id);
 
-  const load = async () => {
-    try {
-      setLoading(true);
-      const data = await transactionsApi.getByAccount(accountId);
-      
-      setTransactions(data);
-      const calculatedStats = calculateDashboardStats(data);
-      setStats(calculatedStats);
-      setError(null);
-      
-    } catch (e: any) {
-      const statusCode = e.status || e.response?.status;
-      
-      if (statusCode === 404 || statusCode === 403) {
-        navigate("/not-found", { replace: true });
-        return; 
-      }
 
-      setError(e instanceof Error ? e.message : "Ошибка загрузки данных");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [dateFrom, setDateFrom] = useState<string>(
+    () => localStorage.getItem(STORAGE_KEYS.dateFrom(accountId)) || ""
+  );
+  const [dateTo, setDateTo] = useState<string>(
+    () => localStorage.getItem(STORAGE_KEYS.dateTo(accountId)) || ""
+  );
+  const [search, setSearch] = useState<string>(
+    () => localStorage.getItem(STORAGE_KEYS.search(accountId)) || ""
+  );
+
+
+  useEffect(() => { localStorage.setItem(STORAGE_KEYS.dateFrom(accountId), dateFrom); }, [dateFrom, accountId]);
+  useEffect(() => { localStorage.setItem(STORAGE_KEYS.dateTo(accountId), dateTo); }, [dateTo, accountId]);
+  useEffect(() => { localStorage.setItem(STORAGE_KEYS.search(accountId), search); }, [search, accountId]);
+
 
   useEffect(() => {
-    load();
-  }, [accountId]);//////////////////////////////////
+    const loadData = async () => {
+      try {
+        setLoading(true);
 
-  const filtered = [...transactions]////////////////
+        const data = await transactionsApi.getByAccount(accountId);
+        setAllTransactions(data);
+        
+
+        const calculatedStats = calculateDashboardStats(data);
+        setStats(calculatedStats);
+        setError(null);
+      } catch (e: any) {
+        const statusCode = e.status || e.response?.status;
+        if (statusCode === 404 || statusCode === 403) {
+          navigate("/not-found", { replace: true });
+          return;
+        }
+        setError(e instanceof Error ? e.message : "Ошибка загрузки данных");
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, [accountId, isAdmin]);
+
+
+
+
+  const filteredTransactions = useMemo(() => {
+    return [...allTransactions]
       .filter((t) => {
+
         const searchLower = search.toLowerCase();
         const note = (t.note ?? "").toLowerCase();
         const category = (t.category ?? "").toLowerCase();
-        return note.includes(searchLower) || category.includes(searchLower);
+        const matchesSearch = note.includes(searchLower) || category.includes(searchLower);
+
+
+        const tDate = new Date(t.date).setHours(0, 0, 0, 0);
+        const matchesDateFrom = dateFrom ? tDate >= new Date(dateFrom).setHours(0, 0, 0, 0) : true;
+        const matchesDateTo = dateTo ? tDate <= new Date(dateTo).setHours(23, 59, 59, 999) : true;
+
+        return matchesSearch && matchesDateFrom && matchesDateTo;
       })
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [allTransactions, search, dateFrom, dateTo]);
+
 
   const handleCreated = async (dto: CreateTransactionDto) => {
     await transactionsApi.Create(dto);
     setShowCreateForm(false);
-    await load();
+
+    const data = await (!isAdmin ? transactionsApi.getAll() : transactionsApi.getByAccount(accountId));
+    setAllTransactions(data);
+    setStats(calculateDashboardStats(data));
   };
 
   const handleDelete = async (id: number, e: React.MouseEvent) => {
@@ -69,9 +108,15 @@ export function AccountCard() {
     if (!confirm(`Удалить транзакцию с id:${id}?`)) return;
     try {
       await transactionsApi.Delete(id);
-      await load();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Не удалось удалить");
+      const data = await (!isAdmin ? transactionsApi.getAll() : transactionsApi.getByAccount(accountId));
+      setAllTransactions(data);
+      setStats(calculateDashboardStats(data));
+    } catch (err: any) {
+      if (err.status === 404 || err.status === 403) {
+        navigate("/not-found", { replace: true });
+        return;
+      }
+      setError(err instanceof Error ? err.message : "Не удалось удалить");
     }
   };
 
@@ -80,21 +125,25 @@ export function AccountCard() {
     navigate("/login", { replace: true });
   };
 
+  const resetFilters = () => {
+    setDateFrom("");
+    setDateTo("");
+    setSearch("");
+    localStorage.removeItem(STORAGE_KEYS.dateFrom(accountId));
+    localStorage.removeItem(STORAGE_KEYS.dateTo(accountId));
+    localStorage.removeItem(STORAGE_KEYS.search(accountId));
+  };
+
   if (loading) return <div className="ac-container">Загрузка…</div>;
   if (error) return <div className="ac-container auth-error">{error}</div>;
 
   return (
     <div className="ac-container">
       <div className="ac-header">
-        {/* Левая часть: кнопка назад и заголовок */}
         <div className="ac-header-left">
-          <button className="ac-back-btn" onClick={() => navigate(-1)}>
-            ← Назад
-          </button>
+          <button className="ac-back-btn" onClick={() => navigate(-1)}>← Назад</button>
           <h1>Транзакции счета</h1>
         </div>
-        
-        {/* Правая часть: приветствие и выход */}
         <div className="sp-header-actions">
           <span>Привет, <b>{username}</b></span>
           <button className="sp-btn-danger" onClick={handleLogout}>Выйти</button>
@@ -117,17 +166,53 @@ export function AccountCard() {
 
       <hr className="ac-divider" />
 
-      <div className="ac-toolbar">
-        <input
-          type="text"
-          placeholder="Поиск по заметке или категории…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <button className="sp-btn" onClick={() => setShowCreateForm((v) => !v)}>
-          {showCreateForm ? "Отмена" : "Создать транзакцию"}
-        </button>
+      {/* ПАНЕЛЬ ФИЛЬТРОВ (Работает мгновенно, без кнопки "Применить") */}
+      <div className="ac-filters">
+        <div className="ac-filters-row">
+          <div className="ac-filter-group">
+            <label>С даты</label>
+            <input 
+              type="date" 
+              value={dateFrom} 
+              onChange={(e) => setDateFrom(e.target.value)} 
+            />
+          </div>
+          <div className="ac-filter-group">
+            <label>По дату</label>
+            <input 
+              type="date" 
+              value={dateTo} 
+              onChange={(e) => setDateTo(e.target.value)} 
+            />
+          </div>
+          <div className="ac-filter-group" style={{ flex: 2 }}>
+            <label>Поиск по заметке/категории</label>
+            <input
+              type="text"
+              placeholder="Введите текст…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          
+          {(dateFrom || dateTo || search) && (
+            <button 
+              className="ac-btn-reset" 
+              onClick={resetFilters} 
+              style={{ alignSelf: 'flex-end', marginBottom: '2px', height: '42px' }}
+            >
+              ✕ Сбросить
+            </button>
+          )}
+        </div>
+        <div className="ac-filters-info">
+          Показано: <b>{filteredTransactions.length}</b> из {allTransactions.length}
+        </div>
       </div>
+
+      <button className="ac-btn-primary" onClick={() => setShowCreateForm((v) => !v)}>
+        {showCreateForm ? "Отмена" : "+ Создать транзакцию"}
+      </button>
 
       {showCreateForm && (
         <CreateTransactionForm
@@ -137,12 +222,16 @@ export function AccountCard() {
         />
       )}
 
-      {filtered.length === 0 ? (
-        <p style={{ textAlign: "center", color: "#718096", padding: "2rem" }}>Ничего не найдено или список пуст.</p>
+      {filteredTransactions.length === 0 ? (
+        <p className="ac-empty">
+          {(dateFrom || dateTo || search) 
+            ? "По заданным фильтрам ничего не найдено. Попробуйте сбросить фильтры." 
+            : "Список транзакций пуст."}
+        </p>
       ) : (
         <ul className="ac-list">
-          {filtered.map((t) => {
-            const isExpense = t.kind === 'Expense' || t.amount < 0;
+          {filteredTransactions.map((t) => {
+            const isExpense = t.kind === 'Expense';
             return (
               <li 
                 key={t.id} 
@@ -153,7 +242,7 @@ export function AccountCard() {
                   <div className="ac-item-header">
                     <span className="ac-item-category">{t.category || t.note || "Без категории"}</span>
                     <span className={`ac-item-amount ${isExpense ? 'expense' : 'income'}`}>
-                      {isExpense ? "−" : "+"}{t.amount} ₽
+                      {isExpense ? "−" : "+"}{Math.abs(t.amount)} ₽
                     </span>
                   </div>
                   <div className="ac-item-details">
@@ -161,10 +250,7 @@ export function AccountCard() {
                     {t.note && t.category && ` • ${t.note}`}
                   </div>
                 </div>
-                <button
-                  className="ac-btn-delete"
-                  onClick={(e) => handleDelete(t.id, e)}
-                >
+                <button className="ac-btn-delete" onClick={(e) => handleDelete(t.id, e)}>
                   ✕
                 </button>
               </li>

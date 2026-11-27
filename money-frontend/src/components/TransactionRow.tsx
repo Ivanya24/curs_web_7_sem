@@ -28,7 +28,14 @@ export function TransactionRow() {
                 const data = await transactionsApi.GetById(transactionId);
                 setTransaction(data);
                 setError(null);
-            } catch (e) {
+            } catch (e : any) {
+                const statusCode = e.status || e.response?.status;
+                
+                if (statusCode === 404 || statusCode === 403) {
+                    
+                    navigate("/not-found", { replace: true });
+                    return;
+                }
                 setError(e instanceof Error ? e.message : "Ошибка загрузки");
             } finally {
                 setLoading(false);
